@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Read to wasm</title>
+</head>
+<body>
+<input type="file" id="file-input"/>
+
+<script>
+  import init from "./pkg/rust.js";
+
+  const runWasm = async () => {
+    var c = await init("./pkg/rust_bg.wasm");
+    var result = c.compute(7, 7);
+    console.log(result);
+
+var fileReader = new FileReader();
+    fileReader.onloadend = e => Rust.reader
+            .then(reader=> {
+                window.alert(reader.print_result(fileReader));
+            });
+
+    var fileInputElement = document.getElementById("file-input");
+    fileInputElement.addEventListener("change", e => fileReader.readAsText(fileInputElement.files[0]));
+
+
+
+  };
+    runWasm();
+
+
+</script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+[package]
+name = "rust"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+wasm-bindgen = "0.2"
+stdweb = "0.4.20"
+aes-gcm = "0.9.4"
+chacha20poly1305 = "0.9.0"
+rand = "0.8.5"
+getrandom = { version = "0.2", features = ["js"] }
+hkdf = "0.12.3"
+sha2 = "0.10.2"
+rsa = "0.5.0"
+pem = "1.0.2"
