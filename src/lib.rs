@@ -67,32 +67,86 @@ pub fn create_rsa() -> Keys {
 
 }
 
+#[wasm_bindgen(getter_with_clone)]
+pub struct encrypt_rsa_args{
+    pub encrypted_aes_key: Vec<u8>,
+    pub encrypted_aes_nonce: Vec<u8>
+}
+
 
 #[wasm_bindgen]
-pub fn encrypt_aes_key(pub_pem: String, priv_pem: String) -> Vec<u8>{
+pub fn encrypt_aes_key(pub_pem: String, file_aes_key: String, file_aes_nonce: String) -> encrypt_rsa_args{
 
     let pub_str = &pub_pem.as_str();
-    let priv_str = &priv_pem.as_str();
 
     let mut rng = rand::thread_rng();
     let public_key = RsaPublicKey::from_pkcs1_pem(pub_str).unwrap();
-    let private_key = RsaPrivateKey::from_pkcs1_pem(priv_str).unwrap();
 
     // Encrypt
-    let data = b"hello world";
+    let file_key = file_aes_key.as_bytes();
+    let file_nonce = file_aes_nonce.as_bytes();
 
 
     let padding = PaddingScheme::new_pkcs1v15_encrypt();
-    let enc_data = public_key.encrypt(&mut rng, padding, &data[..]).expect("failed to encrypt");
+    let enc_file_key = public_key.encrypt(&mut rng, padding, &file_key[..]).expect("failed to encrypt");
+    let padding = PaddingScheme::new_pkcs1v15_encrypt();
+    let enc_file_nonce = public_key.encrypt(&mut rng, padding, &file_nonce[..]).expect("failed to encrypt");
+
+    let rsa_args = encrypt_rsa_args{
+        encrypted_aes_key: enc_file_key,
+        encrypted_aes_nonce: enc_file_nonce
+    };
 
 
-    /*log(enc_data);
+
+    return rsa_args;
+}
+
+#[wasm_bindgen(getter_with_clone)]
+pub struct decrypt_rsa_args{
+    pub decrypted_aes_key: String,
+    pub decrypted_aes_nonce: String
+}
+
+
+#[wasm_bindgen]
+pub fn decrypt_aes_key(priv_pem: String, encrypted_aes_key: Vec<u8>, encrypted_aes_nonce: Vec<u8>) -> decrypt_rsa_args{
+
+    let priv_str = &priv_pem.as_str();
+
+    let private_key = RsaPrivateKey::from_pkcs1_pem(priv_str).unwrap();
+
     // Decrypt
     let padding = PaddingScheme::new_pkcs1v15_encrypt();
-    let dec_data = private_key.decrypt(padding, &enc_data).expect("failed to decrypt");
-    assert_eq!(&data[..], &dec_data[..]);*/
+    let dec_file_key = private_key.decrypt(padding, &encrypted_aes_key).expect("failed to decrypt");
 
-    return enc_data;
+    let padding = PaddingScheme::new_pkcs1v15_encrypt();
+    let dec_file_nonce = private_key.decrypt(padding, &encrypted_aes_nonce).expect("failed to decrypt");
+
+    let file_key = &dec_file_key;
+    let file_nonce = &dec_file_nonce;
+
+    let file_key_u8: &[u8] = &file_key;
+    let file_nonce_u8: &[u8] = &file_nonce;
+
+    let file_key_str = match str::from_utf8(file_key_u8) {
+        Ok(v) => v,
+        Err(e) => panic!("Invalid UTF-8 sequence: {}", e),
+    };
+    let file_nonce_str = match str::from_utf8(file_nonce_u8) {
+        Ok(v) => v,
+        Err(e) => panic!("Invalid UTF-8 sequence: {}", e),
+    };
+
+    let file_key_string = file_key_str.to_string();
+    let file_nonce_string = file_nonce_str.to_string();
+
+    let aes_args = decrypt_rsa_args{
+        decrypted_aes_key: file_key_string,
+        decrypted_aes_nonce: file_nonce_string
+    };
+
+    return aes_args;
 }
 
 

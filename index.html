@@ -5,8 +5,23 @@
     <title>Title</title>
 </head>
 <body>
+<div>
+    <h3>Upload Section</h3> <br>
+    <!-- action to the /upload route-->
+    <form action="/upload"
+          method="post"
+          enctype="multipart/form-data">
+        File to be uploaded: <input type="file"
+                                    name="uploadFile"
+                                    id="file-input">
+        <br><br>
+        <button type="submit">Upload</button>
+    </form>
+    <br>
+</div>
 
-<input type="file" id="file-input"/>
+
+<input type="file" id=""/>
 
 <input type="text" id="text-input"/><input type="text" id="text-input2"/>
 <button id="btn1">compute!</button>

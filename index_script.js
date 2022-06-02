@@ -1,4 +1,4 @@
-import init, { encrypt_file, create_rsa, Keys, encrypt_aes_key, decrypt_file, encrypt_args} from "./pkg/rust.js";
+import init, { encrypt_file, create_rsa, Keys, encrypt_aes_key, decrypt_file, encrypt_args, encrypt_rsa_args, decrypt_rsa_args, decrypt_aes_key} from "./pkg/rust.js";
 
         document.getElementById('btn2').addEventListener('click', generate_keys);
 
@@ -47,10 +47,17 @@ function readFileAsString() {
         var array = new Uint8Array(contents);
         console.log(array);
         var file_encrypt = encrypt_file(array);
-        var file_decrypt = decrypt_file(file_encrypt.file, file_encrypt.key, file_encrypt.nonce);
-        console.log(file_decrypt);
+        console.log(file_encrypt.file, file_encrypt.key, file_encrypt.nonce);
         var cons = create_rsa();
-        encrypt_aes_key(cons.public, cons.private);
+        var file_key_rsa = encrypt_aes_key(cons.public, file_encrypt.key, file_encrypt.nonce);
+        console.log(file_key_rsa.encrypted_aes_key, file_key_rsa.encrypted_aes_nonce);
+
+        var file_key_rsa_decrypted = decrypt_aes_key(cons.private, file_key_rsa.encrypted_aes_key, file_key_rsa.encrypted_aes_nonce );
+        console.log(file_key_rsa_decrypted.decrypted_aes_key, file_key_rsa_decrypted.decrypted_aes_nonce);
+
+        var file_decrypt = decrypt_file(file_encrypt.file, file_key_rsa_decrypted.decrypted_aes_key, file_key_rsa_decrypted.decrypted_aes_nonce);
+        console.log(file_decrypt);
+
 
         //console.log(contents);
         document.getElementById('btn').addEventListener('click', download(array, 'test_png', files[0].type));
