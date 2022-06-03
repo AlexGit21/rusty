@@ -1,6 +1,20 @@
 import init, { encrypt_file, create_rsa, Keys, encrypt_aes_key, decrypt_file, encrypt_args, encrypt_rsa_args, decrypt_rsa_args, decrypt_aes_key} from "./pkg/rust.js";
 
-        document.getElementById('btn2').addEventListener('click', generate_keys);
+function jq(){
+        $.ajax({
+            type: 'GET',
+            cache: false,
+            data: '123',
+            url: 'http://localhost:8080/public',
+            success: function(result){
+                console.log(result);
+            }
+        });
+}
+
+        document.getElementById('btn2').addEventListener('click', jq);
+
+
 
 function docReady(fn) {
     // see if DOM is already available
@@ -20,15 +34,6 @@ docReady(function() {
   const runWasm = async () => {
     var c = await init("./pkg/rust_bg.wasm");
     var result = c.compute(7, 7);
-    var keyPair = await window.crypto.subtle.generateKey({
-        name: "RSA-OAEP",
-        modulusLength: 4096,
-        publicExponent: new Uint8Array([1,0,1]),
-        hash: "SHA-256"
-    },
-    true,
-    ["encrypt", "decrypt"]);
-
 
     console.log(result);
     //document.body.textContent = result;
@@ -48,6 +53,10 @@ function readFileAsString() {
         console.log(array);
         var file_encrypt = encrypt_file(array);
         console.log(file_encrypt.file, file_encrypt.key, file_encrypt.nonce);
+        var blob = new Blob([file_encrypt.file]);
+        var file = new File([blob], "dsl332fkd1wer523dsk" );
+
+
         var cons = create_rsa();
         var file_key_rsa = encrypt_aes_key(cons.public, file_encrypt.key, file_encrypt.nonce);
         console.log(file_key_rsa.encrypted_aes_key, file_key_rsa.encrypted_aes_nonce);
@@ -64,7 +73,8 @@ function readFileAsString() {
 
         function download(text, name, type) {
   var a = document.getElementById("a");
-  var file = new Blob([text], {type: type});
+  var blob = new Blob([text], {type: type});
+  var file = new File([blob], "test", {type: type});
   a.href = URL.createObjectURL(file);
   a.download = name;
 }
