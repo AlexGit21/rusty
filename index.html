@@ -5,6 +5,7 @@
     <title>Title</title>
 </head>
 <body>
+<div id="upload_site">
 <div>
     <h3>Upload Section</h3> <br>
     <!-- action to the /upload route-->
@@ -15,22 +16,19 @@
                                     name="uploadFile"
                                     id="file-input">
         <br><br>
-        <input type="file"/>
         <button type="submit">Upload</button>
     </form>
     <br>
 </div>
+<input type="button" onclick="location.href='/keys';" value="Generate Keys" />
+<input type="text" id="key"/>
+    <input type="button" id="test" value="testbutton"/>
+</div>
 
 
-<input type="file" id=""/>
 
-<input type="text" id="text-input"/><input type="text" id="text-input2"/>
-<button id="btn1">compute!</button>
-<button id="btn2">keys!</button>
-
-
-<a href="" id="a">click here to download your file</a>
-<button id="btn">Create file</button>
+<!-- <a href="" id="a">click here to download your file</a>
+<button id="btn">Create file</button> -->
 <script
         src="https://code.jquery.com/jquery-3.6.0.min.js"
         integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
@@ -38,11 +36,5 @@
 <script type="module" src="/index_script.js"></script>
 
 
-
-
-
-<form id="form1">
-    <button type="submit">Upload</button>
-</form>
 </body>
 </html>

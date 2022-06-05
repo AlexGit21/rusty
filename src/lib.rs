@@ -33,7 +33,8 @@ pub fn compute(a: i32, b: i32) -> i32 {
 #[wasm_bindgen(getter_with_clone)]
 pub struct Keys{
     pub private: String,
-    pub public: String
+    pub public: String,
+    pub key_password: String
 }
 
 #[wasm_bindgen]
@@ -58,9 +59,16 @@ pub fn create_rsa() -> Keys {
     public_s.push_str(&public_pem.unwrap());
     //let pems = private_pem.unwrap();
 
+    let password: String = rand::thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(12)
+        .map(char::from)
+        .collect();
+
     let keys = Keys {
         private: private_s,
-        public: public_s
+        public: public_s,
+        key_password: password
     };
 
     return keys;
@@ -91,6 +99,8 @@ pub fn encrypt_aes_key(pub_pem: String, file_aes_key: String, file_aes_nonce: St
     let enc_file_key = public_key.encrypt(&mut rng, padding, &file_key[..]).expect("failed to encrypt");
     let padding = PaddingScheme::new_pkcs1v15_encrypt();
     let enc_file_nonce = public_key.encrypt(&mut rng, padding, &file_nonce[..]).expect("failed to encrypt");
+
+
 
     let rsa_args = encrypt_rsa_args{
         encrypted_aes_key: enc_file_key,
@@ -154,7 +164,8 @@ pub fn decrypt_aes_key(priv_pem: String, encrypted_aes_key: Vec<u8>, encrypted_a
 pub struct encrypt_args{
     pub key: String,
     pub nonce: String,
-    pub file: Vec<u8>
+    pub file: Vec<u8>,
+    pub file_link: String
 }
 
 #[wasm_bindgen]
@@ -190,6 +201,12 @@ pub fn encrypt_file(file_data: Vec<u8>) -> encrypt_args{
         .map(char::from)
         .collect();
 
+    let f_name: String = rand::thread_rng()
+        .sample_iter(&Alphanumeric)
+        .take(12)
+        .map(char::from)
+        .collect();
+
     let msg_file_data = &file_data;
     let msg: &[u8] = &msg_file_data;
 
@@ -207,7 +224,8 @@ pub fn encrypt_file(file_data: Vec<u8>) -> encrypt_args{
     let aes_args = encrypt_args {
         key: rnd_key,
         nonce: rnd_nonce,
-        file: ciphertext
+        file: ciphertext,
+        file_link: f_name
     };
 
     return aes_args;
