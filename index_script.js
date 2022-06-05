@@ -53,9 +53,9 @@ docReady(function() {
                         }
                     });
 
-            document.getElementById('public_key').value = keys.public;
-            document.getElementById('private_key').value = keys.private;
-            document.getElementById('pub_key_password').value = keys.key_password;
+            document.getElementById('public_key').innerHTML = keys.public;
+            document.getElementById('private_key').innerHTML = keys.private;
+            document.getElementById('pub_key_password').innerHTML = keys.key_password;
             keys_created = true;
 
         }
@@ -94,33 +94,54 @@ function readFileAsByteArray() {
 
     //console.log(files[0]);
 }
-document.getElementById('test').addEventListener('click', fileUpload);
+document.getElementById('upload_button').addEventListener('click', fileUpload);
 async function fileUpload(){
+            var key_or_password = document.getElementById('key').value;
+            if(key_or_password.length == 0) return;
 
-            var file_encrypt = encrypt_file(array);
+            var file_encrypt = await encrypt_file(array);
             console.log(file_encrypt.file, file_encrypt.key, file_encrypt.nonce, file_encrypt.file_link);
+            var password_public_key;
+            var save_password;
+            if(key_or_password.length == 12){
+                 await $.ajax({
+                          type: 'GET',
+                          cache: false,
+                          data:{
+                          password: '' + key_or_password},
+                          url: 'http://localhost:8080/get_key',
+                          success: function(result){
+                              password_public_key = result[0].public_key;
+                          }
+                      });
+                      save_password = key_or_password;
+            }else if(key_or_password.length > 400 && key_or_password.length < 433){
+                password_public_key = key_or_password;
 
-            var hard_public_key = '-----BEGIN RSA PUBLIC KEY-----\n'+
-                                   'MIIBCgKCAQEAyoDLJ1m16A4+edExwa/EjBz3KSpZXJVQy0f6Zt3q3D0BcG+tpWag\n'+
-                                   'ODffsh0IBBhYsz+mdMeQISxDVLbpf/K/MqY1AQKH7FIIE2usMSlQjHvoBIwdexTQ\n'+
-                                   'AUMstTXhTBLSyPT0tt57Itg3kJz4EWD6g/NhxxAHuFCVTBcZubQKobsiQ9AdMNqM\n'+
-                                   'ceHLweuk1VjbgRE38uYBply8LOypr8moAo7hL3Njz6MDpXuJ2A8jic66qk6kVqWN\n'+
-                                   'AL3ZF6gNgEAvw1bZk91ySOUx/otemg68Uo4sFfIubRDWbEMeExUa6k6JgJEXcDf4\n'+
-                                   'b7xFQLxcNXPOSGdCIuHUiAOUIqBjt9M0IwIDAQAB\n'+
-                                   '-----END RSA PUBLIC KEY-----'
+            }else{
+                return;
+            }
 
-            var file_key_rsa = encrypt_aes_key(hard_public_key, file_encrypt.key, file_encrypt.nonce);
+            var file_key_rsa = encrypt_aes_key(password_public_key, file_encrypt.key);
 
-            console.log(file_key_rsa.encrypted_aes_key, file_key_rsa.encrypted_aes_nonce);
+            console.log(file_key_rsa.encrypted_aes_key);
             var blob = new Blob([file_encrypt.file]);
             var file = new File([blob], ""+file_encrypt.file_link );
             var blob_key = new Blob([file_key_rsa.encrypted_aes_key]);
-            var blob_nonce = new Blob([file_key_rsa.encrypted_aes_nonce]);
+            var file_key = new File([blob_key], ""+file_encrypt.file_link+"_key")
 
              var form_data = new FormData();
               form_data.append('upload_file', file);
-              form_data.append('key', blob_key);
-              form_data.append('nonce', blob_nonce);
+              form_data.append('key', file_key);
+              form_data.append('nonce', file_encrypt.nonce);
+              form_data.append('file_type', file_type);
+              form_data.append('file_name', file_name);
+              form_data.append('file_size', file_size);
+              form_data.append('rsa_pub_key', password_public_key);
+              form_data.append('file_name_encrypted', file_encrypt.file_link);
+              form_data.append('rsa_pub_key_password', save_password);
+
+
 
                     $.ajax({
                             url: 'http://localhost:8080/upload', // <-- point to server-side PHP script
@@ -129,24 +150,77 @@ async function fileUpload(){
                             contentType: false,
                             processData: false,
                             data: form_data,
-                            type: 'post'
+                            type: 'post',
+                            success: function(result){
+                                console.log(result);
+                            }
                          });
 
+                         file_encrypt.file_link
+                         document.getElementById('download_link').href = '/download_'+file_encrypt.file_link;
+                         document.getElementById('download_link').href = ''+window.location.href+ 'download_'+file_encrypt.file_link;
+}
+
+}
+
+if($('#download_site').length){
+document.getElementById('download').addEventListener('click', fileDownload);
+async function fileDownload(){
+    if(document.getElementById('private_key').length == 0)return;
+    var enc_file_name = ""+window.location.href;
+    var final_file_name = enc_file_name.replace("http://localhost:8080/download_","");
+    var file;
+    var file_meta_data;
+    var aes_key;
+    await $.ajax({
+            type: 'GET',
+            cache: false,
+            data:{
+            file_name: ''+final_file_name},
+            url: 'http://localhost:8080/d_file',
+            success: function(result){
+                file = result.file.data;
+            }
+        });
+
+        await $.ajax({
+                    type: 'GET',
+                    cache: false,
+                    data:{
+                    file_name: ''+final_file_name},
+                    url: 'http://localhost:8080/d_key',
+                    success: function(result){
+                        aes_key = result.file.data;
+                    }
+                });
+
+        await $.ajax({
+                        type: 'GET',
+                        cache: false,
+                        data:{
+                        file_name: ''+final_file_name},
+                        url: 'http://localhost:8080/file_meta_data',
+                        success: function(result){
+                           file_meta_data = result[0];
+                        }
+                    });
+        console.log(file_meta_data);
+            var private_key = document.getElementById('private_key').value;
 
 
+           var file_key_rsa_decrypted = await decrypt_aes_key(private_key, aes_key, file_meta_data.aes_nonce);
+            console.log(file_key_rsa_decrypted.decrypted_aes_key);
 
-           //var cons = create_rsa();
-            /*var file_key_rsa = encrypt_aes_key(hard_public_key, file_encrypt.key, file_encrypt.nonce);
-            console.log(file_key_rsa.encrypted_aes_key, file_key_rsa.encrypted_aes_nonce);
+            var file_decrypt = await decrypt_file(file, file_key_rsa_decrypted.decrypted_aes_key, file_meta_data.aes_nonce);
+            console.log(file_decrypt);
 
-             var file_key_rsa_decrypted = decrypt_aes_key(cons.private, file_key_rsa.encrypted_aes_key, file_key_rsa.encrypted_aes_nonce );
-            console.log(file_key_rsa_decrypted.decrypted_aes_key, file_key_rsa_decrypted.decrypted_aes_nonce);
+              var a = document.getElementById("a");
+              var blob = new Blob([file_decrypt], {type: file_meta_data.file_type});
+              var file = new File([blob], ""+file_meta_data.file_name, {type: file_meta_data.file_type});
+              a.href = URL.createObjectURL(file);
+              a.download = ""+file_meta_data.file_name;
 
-            var file_decrypt = decrypt_file(file_encrypt.file, file_key_rsa_decrypted.decrypted_aes_key, file_key_rsa_decrypted.decrypted_aes_nonce);
-            console.log(file_decrypt);*/
 
-
-            //console.log(contents);
             /*document.getElementById('btn').addEventListener('click', download(array, 'test_png', files[0].type));
 
             function download(text, name, type) {
@@ -156,14 +230,7 @@ async function fileUpload(){
       a.href = URL.createObjectURL(file);
       a.download = name;
     }*/
-
-
-
-
-
-
 }
-
 }
 
   };
