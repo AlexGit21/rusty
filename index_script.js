@@ -1,6 +1,6 @@
 import init, { encrypt_file, create_rsa, Keys, encrypt_aes_key, decrypt_file, encrypt_args, encrypt_rsa_args, decrypt_rsa_args, decrypt_aes_key} from "./pkg/rust.js";
 
-function jq(){
+/*function jq(){
         $.ajax({
             type: 'GET',
             cache: false,
@@ -10,7 +10,7 @@ function jq(){
                 console.log(result);
             }
         });
-}
+}*/
 
         //document.getElementById('btn2').addEventListener('click', jq);
 
@@ -157,14 +157,15 @@ async function fileUpload(){
                          });
 
                          file_encrypt.file_link
-                         document.getElementById('download_link').href = '/download_'+file_encrypt.file_link;
-                         document.getElementById('download_link').href = ''+window.location.href+ 'download_'+file_encrypt.file_link;
+                         //ocument.getElementById('download_link').href = '/download_'+file_encrypt.file_link;
+                         document.getElementById('download_link').value = ''+window.location.href+ 'download_'+file_encrypt.file_link;
 }
 
 }
 
 if($('#download_site').length){
 document.getElementById('download').addEventListener('click', fileDownload);
+
 async function fileDownload(){
     if(document.getElementById('private_key').length == 0)return;
     var enc_file_name = ""+window.location.href;
@@ -172,16 +173,51 @@ async function fileDownload(){
     var file;
     var file_meta_data;
     var aes_key;
-    await $.ajax({
+
+
+ await   axios({
+        url:'http://localhost:8080/d_file',
+        method:'GET',
+        responseType:'arraybuffer',
+        params:{
+         file_name: ''+final_file_name}
+    }).then((res)=>{
+        //console.log(res);
+        var bytearray = new Uint8Array(res.data);
+        file = bytearray;
+        //console.log(bytearray)
+
+    })
+
+  /* await $.ajax({
             type: 'GET',
+            //responseType: 'blob',
             cache: false,
             data:{
             file_name: ''+final_file_name},
             url: 'http://localhost:8080/d_file',
             success: function(result){
-                file = result.file.data;
+
+                    console.log(result);
+
+
+                 var blob = new Blob([result])
+                  var file = new File([blob], "test")
+                  var reader = new FileReader();
+                    console.log(file);
+                   reader.onload = async function(event) {
+                          var contents =  event.target.result;
+                              array = [];
+                              array = new Uint8Array(contents);
+                              file = array;
+                      };
+                  reader.readAsArrayBuffer(file);
+
+                  //file = array;
+
+                  //file = result.file.data;
             }
-        });
+        });*/
 
         await $.ajax({
                     type: 'GET',
