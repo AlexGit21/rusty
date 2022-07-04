@@ -39,6 +39,7 @@ docReady(function() {
 
     async function generate_keys(){
         if(keys_created === false){
+            document.getElementById('generate_keys').innerHTML = '<img style="width:20px; height:20px;" src="loading.gif">';
             var keys = await create_rsa();
 
             $.ajax({
@@ -50,6 +51,7 @@ docReady(function() {
                         url: 'http://localhost:8080/post_pub_key_to_db',
                         success: function(result){
                             console.log(result);
+                            document.getElementById('generate_keys').innerHTML = 'Generate Keys!'
                         }
                     });
 
@@ -68,12 +70,17 @@ docReady(function() {
     console.log(result);
     //document.body.textContent = result;
     if($('#upload_site').length){
+    //document.getElementById('file-input').addEventListener('change', readFileAsByteArray);
     document.getElementById('file-input').addEventListener('change', readFileAsByteArray);
-    var array;
+    document.getElementById('remove-file').addEventListener('click', removeUpload);
+    var array = [];
     var file_type;
     var file_name;
     var file_size;
 function readFileAsByteArray() {
+console.log(this.files);
+console.log(this.files[0]);
+    if (this.files && this.files[0]) {
     var files = this.files;
     if (files.length === 0) {
         console.log('No file is selected');
@@ -85,22 +92,55 @@ function readFileAsByteArray() {
     console.log(files[0]);
     var reader = new FileReader();
     reader.onload = async function(event) {
+      $('.image-upload-wrap').hide();
+
+      //$('.file-upload-image').attr('src', event.target.result);
+      $('.file-upload-content').show();
+
+      $('.image-title').html(files[0].name);
+
+
         var contents =  event.target.result;
         array = new Uint8Array(contents);
         console.log(array);
 
     };
     reader.readAsArrayBuffer(files[0]);
-
+}else{
+    removeUpload();
+}
     //console.log(files[0]);
 }
-document.getElementById('upload_button').addEventListener('click', fileUpload);
-async function fileUpload(){
-            var key_or_password = document.getElementById('key').value;
-            if(key_or_password.length == 0) return;
 
-            var file_encrypt = await encrypt_file(array);
-            console.log(file_encrypt.file, file_encrypt.key, file_encrypt.nonce, file_encrypt.file_link);
+function removeUpload() {
+  //$('.file-upload-input').replaceWith($('.file-upload-input').clone());
+  document.getElementById("file-input").value = "";
+  $('.file-upload-content').hide();
+  $('.image-upload-wrap').show();
+  array = [];
+}
+$('.image-upload-wrap').bind('dragover', function () {
+    $('.image-upload-wrap').addClass('image-dropping');
+  });
+  $('.image-upload-wrap').bind('dragleave', function () {
+    $('.image-upload-wrap').removeClass('image-dropping');
+});
+
+
+
+
+
+
+
+document.getElementById('upload_button').addEventListener('click', fileUpload);
+
+async function fileUpload(){
+            console.log(array);
+            var key_or_password = document.getElementById('key').value;
+            if(key_or_password.length == 0 || array.length == 0 || array === undefined) return;
+            document.getElementById('upload_button').removeEventListener('click', fileUpload);
+            document.getElementById('upload_button').innerHTML = '<img style="width:20px; height:20px;" src="loading.gif">';
+
             var password_public_key;
             var save_password;
             if(key_or_password.length == 12){
@@ -111,19 +151,40 @@ async function fileUpload(){
                           password: '' + key_or_password},
                           url: 'http://localhost:8080/get_key',
                           success: function(result){
+                              if(result.length == 0) {
+                              alert("Wrong public key password!");
+                              document.getElementById('upload_button').innerHTML = 'Upload File!'
+                              document.getElementById('upload_button').addEventListener('click', fileUpload);
+                                return;
+                              }
                               password_public_key = result[0].public_key;
                           }
                       });
                       save_password = key_or_password;
             }else if(key_or_password.length > 400 && key_or_password.length < 433){
                 password_public_key = key_or_password;
+                console.log(key_or_password);
 
             }else{
+                alert("Please input a public key password or a public key!");
+                document.getElementById('upload_button').innerHTML = 'Upload File!'
+                document.getElementById('upload_button').addEventListener('click', fileUpload);
                 return;
             }
 
-            var file_key_rsa = encrypt_aes_key(password_public_key, file_encrypt.key);
+            if(password_public_key === undefined)return;
 
+            var file_encrypt = await encrypt_file(array);
+            console.log(file_encrypt.file, file_encrypt.key, file_encrypt.nonce, file_encrypt.file_link);
+            try{
+            var file_key_rsa = encrypt_aes_key(password_public_key, file_encrypt.key);
+            }catch(e){
+                alert("Wrong public key format!");
+                document.getElementById('upload_button').innerHTML = 'Upload File!'
+                document.getElementById('upload_button').addEventListener('click', fileUpload);
+                return;
+
+            }
             console.log(file_key_rsa.encrypted_aes_key);
             var blob = new Blob([file_encrypt.file]);
             var file = new File([blob], ""+file_encrypt.file_link );
@@ -153,12 +214,15 @@ async function fileUpload(){
                             type: 'post',
                             success: function(result){
                                 console.log(result);
+                                document.getElementById('upload_button').innerHTML = 'Upload File!'
+                                document.getElementById('upload_button').addEventListener('click', fileUpload);
                             }
                          });
 
                          file_encrypt.file_link
                          //ocument.getElementById('download_link').href = '/download_'+file_encrypt.file_link;
-                         document.getElementById('download_link').value = ''+window.location.href+ 'download_'+file_encrypt.file_link;
+                         document.getElementById('download_link').innerHTML = ''+window.location.href+ 'download_'+file_encrypt.file_link;
+                         removeUpload();
 }
 
 }
@@ -168,8 +232,11 @@ document.getElementById('download').addEventListener('click', fileDownload);
 
 async function fileDownload(){
     if(document.getElementById('private_key').length == 0)return;
+    document.getElementById('download').removeEventListener('click', fileDownload);
     var enc_file_name = ""+window.location.href;
-    var final_file_name = enc_file_name.replace("http://localhost:8080/download_","");
+        enc_file_name = enc_file_name.replace("http://localhost:8080/download_","");
+        enc_file_name = enc_file_name.replace("http://localhost:8080/download","");
+    var final_file_name = enc_file_name;
     var file;
     var file_meta_data;
     var aes_key;
@@ -243,10 +310,14 @@ async function fileDownload(){
         console.log(file_meta_data);
             var private_key = document.getElementById('private_key').value;
 
-
-           var file_key_rsa_decrypted = await decrypt_aes_key(private_key, aes_key, file_meta_data.aes_nonce);
-            console.log(file_key_rsa_decrypted.decrypted_aes_key);
-
+            try{
+                var file_key_rsa_decrypted = await decrypt_aes_key(private_key, aes_key, file_meta_data.aes_nonce);
+                console.log(file_key_rsa_decrypted.decrypted_aes_key);
+            }catch(e){
+                alert("Wrong private key or wrong private key format!");
+                document.getElementById('download').addEventListener('click', fileDownload);
+                return;
+            }
             var file_decrypt = await decrypt_file(file, file_key_rsa_decrypted.decrypted_aes_key, file_meta_data.aes_nonce);
             console.log(file_decrypt);
 
@@ -255,6 +326,7 @@ async function fileDownload(){
               var file = new File([blob], ""+file_meta_data.file_name, {type: file_meta_data.file_type});
               a.href = URL.createObjectURL(file);
               a.download = ""+file_meta_data.file_name;
+              a.style = "display:block;";
 
 
             /*document.getElementById('btn').addEventListener('click', download(array, 'test_png', files[0].type));

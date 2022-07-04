@@ -1,8 +1,9 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Upload File</title>
+    <meta charset="utf-8">
+    <title>Generate Keys</title>
+
     <style>
 
 
@@ -127,49 +128,17 @@ body {
     </style>
 </head>
 <body>
-<div id="upload_site" style="width: 100%; height: 100%;">
-
-    <div class="file-upload">
-        <button class="file-upload-btn" type="button" onclick="$('.file-upload-input').trigger( 'click' )">Add Image</button>
-
-        <div class="image-upload-wrap">
-            <form action="/upload"
-                  method="post"
-                  enctype="multipart/form-data">
-            <input class="file-upload-input" type='file' id="file-input"  />
-            </form>
-            <div class="drag-text">
-                <h3>Drag and drop a file or select add Image</h3>
-            </div>
-        </div>
-        <div class="file-upload-content">
-            <div class="image-title-wrap">
-                <button type="button" class="remove-image">Remove <span class="image-title" id="remove-file">Uploaded Image</span></button>
-            </div>
-        </div>
-    </div>
-
-
-
-
-<input type="button" class="file-upload-btn" onclick="location.href='/keys';" value="Generate Keys" />
-    <textarea type="text" id="key" style="width: 30%;" rows="8"></textarea>
-    <button type="button" class="file-upload-btn" id="upload_button" >Upload File!</button>
-
-    <div href="" id="download_link"></div>
+<div id="key_generator">
+<button id="generate_keys" class="file-upload-btn">Generate Keys!</button>
+    <textarea  id="private_key"></textarea>
+    <textarea  id="pub_key_password"></textarea>
+    <textarea id="public_key"></textarea>
+<input type="button" onclick="location.href='/';" value="Upload"  class="file-upload-btn"/>
 </div>
-
-<img src="loading.gif">
-
-<!-- <a href="" id="a">click here to download your file</a>
-<button id="btn">Create file</button> -->
-
 <script
         src="https://code.jquery.com/jquery-3.6.0.min.js"
         integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
         crossorigin="anonymous"></script>
 <script type="module" src="/index_script.js"></script>
-
-
 </body>
 </html>
