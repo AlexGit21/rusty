@@ -11,11 +11,50 @@ body {
   background-color: #eeeeee;
 }
 
+.key {
+    position:absolute;
+    top: 37%;
+    left: 54.5%;
+    resize: none;
+}
+
+#upload_button {
+    position: absolute;
+    top: 55%;
+    left: 54.5%;
+    width: 30.5%;
+}
+
+#generate_keys {
+    position: absolute;
+    top: 90%;
+    left: 54.5%;
+    width: 30.5%;
+}
+
+#key_info{
+    width: 30.5%;
+    position: absolute;
+    left: 54.5%;
+    top: 30%;
+
+}
+
+#generate_info{
+    width: 45.5%;
+    position: absolute;
+    left: 5%;
+    top: 90%;
+
+}
 .file-upload {
   background-color: #eeeeee;
-  width: 600px;
+  width: 30.5%;
   margin: 0 auto;
-  padding: 20px;
+  //padding: 20px;
+  position: absolute;
+  top: 30%;
+  left: 15%;
 }
 
 .file-upload-btn {
@@ -61,19 +100,19 @@ body {
   cursor: pointer;
 }
 
-.image-upload-wrap {
+.file-upload-wrap {
   margin-top: 20px;
   border: 4px dashed #1FB264;
   position: relative;
 }
 
-.image-dropping,
-.image-upload-wrap:hover {
+.file-dropping,
+.file-upload-wrap:hover {
   background-color: #1FB264;
   border: 4px dashed #ffffff;
 }
 
-.image-title-wrap {
+.file-title-wrap {
   padding: 0 15px 15px 15px;
   color: #222;
 }
@@ -89,14 +128,14 @@ body {
   padding: 60px 0;
 }
 
-.file-upload-image {
+.file-upload-file {
   max-height: 200px;
   max-width: 200px;
   margin: auto;
   padding: 20px;
 }
 
-.remove-image {
+.remove-file {
   width: 200px;
   margin: 0;
   color: #fff;
@@ -111,14 +150,14 @@ body {
   font-weight: 700;
 }
 
-.remove-image:hover {
+.remove-file:hover {
   background: #c13b2a;
   color: #ffffff;
   transition: all .2s ease;
   cursor: pointer;
 }
 
-.remove-image:active {
+.remove-file:active {
   border: 0;
   transition: all .2s ease;
 }
@@ -128,23 +167,23 @@ body {
 </head>
 <body>
 <div id="upload_site" style="width: 100%; height: 100%;">
-
+    <textarea type="text" class="key" id="key" style="width: 30%;" rows="8"></textarea>
     <div class="file-upload">
-        <button class="file-upload-btn" type="button" onclick="$('.file-upload-input').trigger( 'click' )">Add Image</button>
+        <button class="file-upload-btn" type="button" onclick="$('.file-upload-input').trigger( 'click' )">Add File</button>
 
-        <div class="image-upload-wrap">
+        <div class="file-upload-wrap">
             <form action="/upload"
                   method="post"
                   enctype="multipart/form-data">
             <input class="file-upload-input" type='file' id="file-input"  />
             </form>
             <div class="drag-text">
-                <h3>Drag and drop a file or select add Image</h3>
+                <h3>Drag and drop a file </h3>
             </div>
         </div>
         <div class="file-upload-content">
-            <div class="image-title-wrap">
-                <button type="button" class="remove-image">Remove <span class="image-title" id="remove-file">Uploaded Image</span></button>
+            <div class="file-title-wrap" style="padding: 20px;">
+                <button type="button" class="remove-file">Remove <span class="file-title" id="remove-file">Uploaded File</span></button>
             </div>
         </div>
     </div>
@@ -152,17 +191,14 @@ body {
 
 
 
-<input type="button" class="file-upload-btn" onclick="location.href='/keys';" value="Generate Keys" />
-    <textarea type="text" id="key" style="width: 30%;" rows="8"></textarea>
+<input type="button" class="file-upload-btn" id="generate_keys" onclick="location.href='/keys';" value="Generate Keypair" />
+
     <button type="button" class="file-upload-btn" id="upload_button" >Upload File!</button>
 
-    <div href="" id="download_link"></div>
+    <div href="" style="position:absolute; left: 54.5%; top: 70%; display: none;" id="dwn_link">Download: <a id="download_link" style="display:inline;"></a></div>
+    <h4 id="key_info">Enter a public key password or a public key (PKCS#1-format):</h4>
+    <h4 id="generate_info">If you need to generate a keypair and a public key password, visit the key generator page:</h4>
 </div>
-
-<img src="loading.gif">
-
-<!-- <a href="" id="a">click here to download your file</a>
-<button id="btn">Create file</button> -->
 
 <script
         src="https://code.jquery.com/jquery-3.6.0.min.js"

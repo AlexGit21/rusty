@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Generate Keys</title>
+    <title>Generate Keypair</title>
 
     <style>
 
@@ -62,19 +62,19 @@ body {
   cursor: pointer;
 }
 
-.image-upload-wrap {
+.file-upload-wrap {
   margin-top: 20px;
   border: 4px dashed #1FB264;
   position: relative;
 }
 
-.image-dropping,
-.image-upload-wrap:hover {
+.file-dropping,
+.file-upload-wrap:hover {
   background-color: #1FB264;
   border: 4px dashed #ffffff;
 }
 
-.image-title-wrap {
+.file-title-wrap {
   padding: 0 15px 15px 15px;
   color: #222;
 }
@@ -90,14 +90,14 @@ body {
   padding: 60px 0;
 }
 
-.file-upload-image {
+.file-upload-file {
   max-height: 200px;
   max-width: 200px;
   margin: auto;
   padding: 20px;
 }
 
-.remove-image {
+.remove-file {
   width: 200px;
   margin: 0;
   color: #fff;
@@ -112,28 +112,86 @@ body {
   font-weight: 700;
 }
 
-.remove-image:hover {
+.remove-file:hover {
   background: #c13b2a;
   color: #ffffff;
   transition: all .2s ease;
   cursor: pointer;
 }
 
-.remove-image:active {
+.remove-file:active {
   border: 0;
   transition: all .2s ease;
 }
 
+#private_key{
+
+    position: absolute;
+    top: 20%;
+    left:15%;
+
+}
+
+#pub_key_password{
+
+    position: absolute;
+    top: 20%;
+    left: 55%;
+
+}
+
+#public_key{
+
+    position: absolute;
+    top: 30%;
+    left: 55%;
+
+}
+
+#private_key_info{
+    position: absolute;
+    top: 15%;
+    left:15%;
+}
+
+#public_password{
+    position: absolute;
+    top: 15%;
+    left:55%;
+}
+
+#public_key_info{
+    position: absolute;
+    top: 25%;
+    left:55%;
+}
+
+#generate_keys{
+    position: absolute;
+    top: 75%;
+    left:15%;
+    width: 70.5%;
+}
+
+#upload_button{
+    position: absolute;
+    top: 83%;
+    left:15%;
+    width: 70.5%;
+}
 
     </style>
 </head>
 <body>
 <div id="key_generator">
-<button id="generate_keys" class="file-upload-btn">Generate Keys!</button>
-    <textarea  id="private_key"></textarea>
-    <textarea  id="pub_key_password"></textarea>
-    <textarea id="public_key"></textarea>
-<input type="button" onclick="location.href='/';" value="Upload"  class="file-upload-btn"/>
+    <textarea  id="private_key" style="width:30%; resize:none" rows="27"></textarea>
+    <textarea  id="pub_key_password" rows="1" style="width: 30%; resize:none;"></textarea>
+    <textarea id="public_key" rows="8" style="width:30%; resize: none;"></textarea>
+    <button id="generate_keys" class="file-upload-btn">Generate Keys!</button>
+    <h4 id="private_key_info">private key:</h4>
+    <h4 id="public_password">public key password:</h4>
+    <h4 id="public_key_info">public key:</h4>
+<input type="button" id="upload_button" onclick="location.href='/';" value="back to upload page"  class="file-upload-btn"/>
 </div>
 <script
         src="https://code.jquery.com/jquery-3.6.0.min.js"

@@ -1,21 +1,5 @@
 import init, { encrypt_file, create_rsa, Keys, encrypt_aes_key, decrypt_file, encrypt_args, encrypt_rsa_args, decrypt_rsa_args, decrypt_aes_key} from "./pkg/rust.js";
 
-/*function jq(){
-        $.ajax({
-            type: 'GET',
-            cache: false,
-            data: '123',
-            url: 'http://localhost:8080/public',
-            success: function(result){
-                console.log(result);
-            }
-        });
-}*/
-
-        //document.getElementById('btn2').addEventListener('click', jq);
-
-
-
 function docReady(fn) {
     // see if DOM is already available
     if (document.readyState === "complete" || document.readyState === "interactive") {
@@ -32,16 +16,19 @@ docReady(function() {
 
 
   const runWasm = async () => {
+    //rust test
     var c = await init("./pkg/rust_bg.wasm");
     var result = c.compute(7, 7);
+
     if($('#key_generator').length){
     var keys_created = false;
-
+    // generates rsa keypair and a public key password
     async function generate_keys(){
         if(keys_created === false){
             document.getElementById('generate_keys').innerHTML = '<img style="width:20px; height:20px;" src="loading.gif">';
+            //rust function to generate keypair and pub key password
             var keys = await create_rsa();
-
+            //saves pub key and password to database
             $.ajax({
                         type: 'GET',
                         cache: false,
@@ -50,11 +37,10 @@ docReady(function() {
                         pub_key_password: '' + keys.key_password},
                         url: 'http://localhost:8080/post_pub_key_to_db',
                         success: function(result){
-                            console.log(result);
                             document.getElementById('generate_keys').innerHTML = 'Generate Keys!'
                         }
                     });
-
+            //binds keypair and password to textareas
             document.getElementById('public_key').innerHTML = keys.public;
             document.getElementById('private_key').innerHTML = keys.private;
             document.getElementById('pub_key_password').innerHTML = keys.key_password;
@@ -67,19 +53,18 @@ docReady(function() {
     document.getElementById('generate_keys').addEventListener('click', generate_keys);
 
     }
-    console.log(result);
-    //document.body.textContent = result;
+
+
     if($('#upload_site').length){
-    //document.getElementById('file-input').addEventListener('change', readFileAsByteArray);
+
     document.getElementById('file-input').addEventListener('change', readFileAsByteArray);
     document.getElementById('remove-file').addEventListener('click', removeUpload);
     var array = [];
     var file_type;
     var file_name;
     var file_size;
+//on file input creates a byte array from file
 function readFileAsByteArray() {
-console.log(this.files);
-console.log(this.files[0]);
     if (this.files && this.files[0]) {
     var files = this.files;
     if (files.length === 0) {
@@ -89,41 +74,36 @@ console.log(this.files[0]);
     file_type = files[0].type;
     file_name = files[0].name;
     file_size = files[0].size;
-    console.log(files[0]);
     var reader = new FileReader();
     reader.onload = async function(event) {
-      $('.image-upload-wrap').hide();
+      $('.file-upload-wrap').hide();
 
-      //$('.file-upload-image').attr('src', event.target.result);
       $('.file-upload-content').show();
 
-      $('.image-title').html(files[0].name);
-
+      $('.file-title').html(files[0].name);
 
         var contents =  event.target.result;
+        //array contains file as byte array
         array = new Uint8Array(contents);
-        console.log(array);
 
     };
     reader.readAsArrayBuffer(files[0]);
 }else{
     removeUpload();
 }
-    //console.log(files[0]);
 }
-
+//changes css on file remove by user
 function removeUpload() {
-  //$('.file-upload-input').replaceWith($('.file-upload-input').clone());
   document.getElementById("file-input").value = "";
   $('.file-upload-content').hide();
-  $('.image-upload-wrap').show();
+  $('.file-upload-wrap').show();
   array = [];
 }
-$('.image-upload-wrap').bind('dragover', function () {
-    $('.image-upload-wrap').addClass('image-dropping');
+$('.file-upload-wrap').bind('dragover', function () {
+    $('.file-upload-wrap').addClass('file-dropping');
   });
-  $('.image-upload-wrap').bind('dragleave', function () {
-    $('.image-upload-wrap').removeClass('image-dropping');
+  $('.file-upload-wrap').bind('dragleave', function () {
+    $('.file-upload-wrap').removeClass('file-dropping');
 });
 
 
@@ -133,9 +113,8 @@ $('.image-upload-wrap').bind('dragover', function () {
 
 
 document.getElementById('upload_button').addEventListener('click', fileUpload);
-
+//uploads file to server
 async function fileUpload(){
-            console.log(array);
             var key_or_password = document.getElementById('key').value;
             if(key_or_password.length == 0 || array.length == 0 || array === undefined) return;
             document.getElementById('upload_button').removeEventListener('click', fileUpload);
@@ -143,6 +122,7 @@ async function fileUpload(){
 
             var password_public_key;
             var save_password;
+            //checks password or public key before upload
             if(key_or_password.length == 12){
                  await $.ajax({
                           type: 'GET',
@@ -163,7 +143,6 @@ async function fileUpload(){
                       save_password = key_or_password;
             }else if(key_or_password.length > 400 && key_or_password.length < 433){
                 password_public_key = key_or_password;
-                console.log(key_or_password);
 
             }else{
                 alert("Please input a public key password or a public key!");
@@ -173,10 +152,10 @@ async function fileUpload(){
             }
 
             if(password_public_key === undefined)return;
-
+            //rust file encryption aes
             var file_encrypt = await encrypt_file(array);
-            console.log(file_encrypt.file, file_encrypt.key, file_encrypt.nonce, file_encrypt.file_link);
             try{
+            //rust aes key encryption via rsa public key
             var file_key_rsa = encrypt_aes_key(password_public_key, file_encrypt.key);
             }catch(e){
                 alert("Wrong public key format!");
@@ -185,7 +164,8 @@ async function fileUpload(){
                 return;
 
             }
-            console.log(file_key_rsa.encrypted_aes_key);
+
+            //creates file and aes key file from encrypted byte arrays
             var blob = new Blob([file_encrypt.file]);
             var file = new File([blob], ""+file_encrypt.file_link );
             var blob_key = new Blob([file_key_rsa.encrypted_aes_key]);
@@ -203,7 +183,7 @@ async function fileUpload(){
               form_data.append('rsa_pub_key_password', save_password);
 
 
-
+                    //sends encrypted file, encrypted key and meta data to server
                     $.ajax({
                             url: 'http://localhost:8080/upload', // <-- point to server-side PHP script
                             dataType: 'text',  // <-- what to expect back from the PHP script, if anything
@@ -213,15 +193,15 @@ async function fileUpload(){
                             data: form_data,
                             type: 'post',
                             success: function(result){
-                                console.log(result);
                                 document.getElementById('upload_button').innerHTML = 'Upload File!'
                                 document.getElementById('upload_button').addEventListener('click', fileUpload);
                             }
                          });
 
-                         file_encrypt.file_link
-                         //ocument.getElementById('download_link').href = '/download_'+file_encrypt.file_link;
+                         //creates download link and outputs it to user
                          document.getElementById('download_link').innerHTML = ''+window.location.href+ 'download_'+file_encrypt.file_link;
+                         document.getElementById('download_link').href = ''+window.location.href+ 'download_'+file_encrypt.file_link;
+                         document.getElementById('dwn_link').style.display = "block"
                          removeUpload();
 }
 
@@ -229,7 +209,7 @@ async function fileUpload(){
 
 if($('#download_site').length){
 document.getElementById('download').addEventListener('click', fileDownload);
-
+//file download function
 async function fileDownload(){
     if(document.getElementById('private_key').length == 0)return;
     document.getElementById('download').removeEventListener('click', fileDownload);
@@ -241,7 +221,7 @@ async function fileDownload(){
     var file_meta_data;
     var aes_key;
 
-
+//gets binary file from server as array buffer and creates a byte array
  await   axios({
         url:'http://localhost:8080/d_file',
         method:'GET',
@@ -249,43 +229,12 @@ async function fileDownload(){
         params:{
          file_name: ''+final_file_name}
     }).then((res)=>{
-        //console.log(res);
         var bytearray = new Uint8Array(res.data);
         file = bytearray;
-        //console.log(bytearray)
 
     })
 
-  /* await $.ajax({
-            type: 'GET',
-            //responseType: 'blob',
-            cache: false,
-            data:{
-            file_name: ''+final_file_name},
-            url: 'http://localhost:8080/d_file',
-            success: function(result){
-
-                    console.log(result);
-
-
-                 var blob = new Blob([result])
-                  var file = new File([blob], "test")
-                  var reader = new FileReader();
-                    console.log(file);
-                   reader.onload = async function(event) {
-                          var contents =  event.target.result;
-                              array = [];
-                              array = new Uint8Array(contents);
-                              file = array;
-                      };
-                  reader.readAsArrayBuffer(file);
-
-                  //file = array;
-
-                  //file = result.file.data;
-            }
-        });*/
-
+        //gets encrypted aes key as byte array from server
         await $.ajax({
                     type: 'GET',
                     cache: false,
@@ -296,7 +245,7 @@ async function fileDownload(){
                         aes_key = result.file.data;
                     }
                 });
-
+        //gets meta data of the downloaded file from server
         await $.ajax({
                         type: 'GET',
                         cache: false,
@@ -307,20 +256,19 @@ async function fileDownload(){
                            file_meta_data = result[0];
                         }
                     });
-        console.log(file_meta_data);
             var private_key = document.getElementById('private_key').value;
 
             try{
+                //rust function to decrypt aes key
                 var file_key_rsa_decrypted = await decrypt_aes_key(private_key, aes_key, file_meta_data.aes_nonce);
-                console.log(file_key_rsa_decrypted.decrypted_aes_key);
             }catch(e){
                 alert("Wrong private key or wrong private key format!");
                 document.getElementById('download').addEventListener('click', fileDownload);
                 return;
             }
+            //rust function to decrypt file
             var file_decrypt = await decrypt_file(file, file_key_rsa_decrypted.decrypted_aes_key, file_meta_data.aes_nonce);
-            console.log(file_decrypt);
-
+              //binds the decrypted file to <a> element for download from user
               var a = document.getElementById("a");
               var blob = new Blob([file_decrypt], {type: file_meta_data.file_type});
               var file = new File([blob], ""+file_meta_data.file_name, {type: file_meta_data.file_type});
@@ -328,16 +276,6 @@ async function fileDownload(){
               a.download = ""+file_meta_data.file_name;
               a.style = "display:block;";
 
-
-            /*document.getElementById('btn').addEventListener('click', download(array, 'test_png', files[0].type));
-
-            function download(text, name, type) {
-      var a = document.getElementById("a");
-      var blob = new Blob([text], {type: type});
-      var file = new File([blob], "test", {type: type});
-      a.href = URL.createObjectURL(file);
-      a.download = name;
-    }*/
 }
 }
 
